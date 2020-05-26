@@ -61,16 +61,23 @@ fn send_message(socket_path: &Path) -> Result<()> {
     let message = SocketRequest {
         message: SocketMessage::Ping,
     };
+
     serde_cbor::to_writer(&stream, &message)?;
-    // let vec_cmd = serde_cbor::to_vec(&command)?;
-    // stream.write_all(&vec_cmd)?;
     stream.flush()?;
+
+    println!("Message sent. Wait 3 seconds...");
+
+    //Another way that should produce the same result.
+    // let vec_cmd = serde_cbor::to_vec(&message)?;
+    // stream.write_all(&vec_cmd)?;
+    // stream.flush()?;
 
     //Wait a bit before asking for response.
     use std::{thread, time};
-    let ten_millis = time::Duration::from_secs(3);
-    thread::sleep(ten_millis);
+    let time = time::Duration::from_secs(3);
+    thread::sleep(time);
 
+    //It will block here.
     println!("Receiving response");
     let response: SocketResponse = serde_cbor::from_reader(&stream)?;
 
@@ -85,8 +92,9 @@ fn send_message(socket_path: &Path) -> Result<()> {
 //to keep it open, we'd have to loop here and read messages.
 fn receive_message(stream: UnixStream) -> Result<()> {
     println!("Receiving message");
-    let request: SocketRequest = serde_cbor::from_reader(&stream)?;
 
+    //It will block here.
+    let request: SocketRequest = serde_cbor::from_reader(&stream)?;
     println!("Message received: {:?}", request);
 
     let response = SocketResponse {
